@@ -255,7 +255,7 @@
     ARJAY2REEL<span class="dot">.</span>
   </a>
   <ul class="nav-links">
-    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#portfolio">Portfolio</a></li>
     <li><a href="#reel">Reel</a></li>
     <li><a href="#clients">Clients</a></li>
     <li><a href="#services">Services</a></li>
@@ -280,7 +280,7 @@
     </h1>
     <p class="hero-sub">Capturing the raw pulse of urban music — from street corners to studio sessions, from underground to the top.</p>
     <div class="hero-actions">
-      <a href="#gallery" class="btn-fill">View Gallery ↗</a>
+      <a href="#portfolio" class="btn-fill">View Portfolio ↗</a>
       <a href="#reel" class="btn-outline">Watch Reel</a>
     </div>
   </div>
@@ -325,9 +325,9 @@
 <!-- ═══════════════════════════════
      GALLERY
 ═══════════════════════════════ -->
-<section id="gallery">
+<section id="portfolio">
   <div class="gallery-hdr reveal">
-    <div><p class="sec-label">// The Archive</p><h2 class="sec-title">GALLERY</h2></div>
+    <div><p class="sec-label">// The Work</p><h2 class="sec-title">THE PORTFOLIO</h2></div>
     <div class="gallery-filter">
       <button class="gf-btn active" data-filter="all">All</button>
       <button class="gf-btn" data-filter="photography">Photography</button>
@@ -338,7 +338,12 @@
     </div>
   </div>
   <div class="gallery-masonry" id="galleryGrid"></div>
-  </section>
+  <div class="see-more-wrap">
+    <button class="see-more-btn" id="seeMoreBtn" onclick="toggleAllPhotos()">
+      SEE MORE WORK ↓
+    </button>
+  </div>
+</section>
 
 <!-- lightbox -->
 <div class="glb" id="glb">
@@ -680,8 +685,74 @@
     }
   }
 
+  // ── Portfolio gallery ────────────────────────────────────────────────────
+  const CAT_LABELS = {
+    'photography': 'Photography',
+    'music-video': 'Music Video',
+    'bts':         'BTS',
+    'portraits':   'Portraits',
+    'design':      'Design',
+  };
+
+  const PREVIEW_COUNT = 12;
+  let allVisible = false;
+
+  function buildGallery(){
+    const grid = document.getElementById('galleryGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    PHOTOS.gallery.forEach((item) => {
+      const label = CAT_LABELS[item.cat] || item.cat;
+      const el = document.createElement('div');
+      el.className = 'gallery-item reveal';
+      el.setAttribute('data-cat', item.cat);
+      el.innerHTML =
+        '<div class="ubox filled" style="min-height:unset;border:none;" onclick="glbOpen(this)">' +
+          '<img src="' + item.src + '" loading="lazy" alt="' + label + ' — ' + item.title + '" ' +
+               'style="position:relative;width:100%;height:auto;display:block;z-index:1;">' +
+        '</div>' +
+        '<div class="gallery-item-overlay">' +
+          '<p class="gi-cat">' + label + '</p>' +
+          '<p class="gi-title">' + item.title + '</p>' +
+        '</div>' +
+        '<div class="gi-expand"><svg viewBox="0 0 24 24" stroke-width="2">' +
+          '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
+          '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>' +
+        '</svg></div>';
+      grid.appendChild(el);
+    });
+    applyCollapse();
+  }
+
+  function applyCollapse(){
+    const activeFilter = document.querySelector('.gf-btn.active')?.dataset.filter || 'all';
+    let shown = 0;
+    document.querySelectorAll('#galleryGrid .gallery-item').forEach(el => {
+      el.classList.remove('collapsed');
+      const matches = activeFilter === 'all' || el.dataset.cat === activeFilter;
+      if(matches && !allVisible){
+        shown++;
+        if(shown > PREVIEW_COUNT) el.classList.add('collapsed');
+      }
+    });
+  }
+
+  function toggleAllPhotos(){
+    allVisible = !allVisible;
+    const btn = document.getElementById('seeMoreBtn');
+    if(allVisible){
+      document.querySelectorAll('#galleryGrid .gallery-item.collapsed').forEach(el => el.classList.remove('collapsed'));
+      if(btn) btn.textContent = 'SHOW LESS ↑';
+    } else {
+      applyCollapse();
+      if(btn) btn.textContent = 'SEE MORE WORK ↓';
+    }
+    buildLightboxIndex();
+  }
+
   // ── Restore all saved slots on load ──────────────────────────────────────
   function restoreAll(){
+    buildGallery();
     for(let i=0;i<localStorage.length;i++){
       const key=localStorage.key(i);
       if(!key.startsWith(STORE)) continue;
@@ -746,7 +817,7 @@
   // ── Lightbox ──────────────────────────────────────────────────────────────
   let glbItems=[],glbCurrent=0;
   function buildLightboxIndex(){
-    glbItems=Array.from(document.querySelectorAll('#galleryGrid .gallery-item'));
+    glbItems=Array.from(document.querySelectorAll('#galleryGrid .gallery-item:not(.collapsed)'));
   }
 
   function glbOpen(ubox){
@@ -795,8 +866,14 @@
       this.classList.add('active');
       const f=this.dataset.filter;
       document.querySelectorAll('#galleryGrid .gallery-item').forEach(item=>{
-        item.style.display=(f==='all'||item.dataset.cat===f)?'':'none';
+        const match=(f==='all'||item.dataset.cat===f);
+        item.style.display=match?'':'none';
+        if(!match) item.classList.remove('collapsed');
       });
+      allVisible=false;
+      const btn=document.getElementById('seeMoreBtn');
+      if(btn) btn.textContent='SEE MORE WORK ↓';
+      if(!allVisible) applyCollapse();
       buildLightboxIndex();
     });
   });
