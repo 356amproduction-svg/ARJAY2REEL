@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Large video files — use Git LFS or a host like YouTube/Vimeo
+*.mov
+*.MOV
+*.mp4
+*.MP4
+
+# Old working files — not part of the deployed site
+photos/
+arjay2reel-portfolio 3/
+portfolio-v2-SAVED (1).html
+
+# Node
+node_modules/
+
+# Misc
+Thumbs.db
