@@ -8,6 +8,7 @@
 *.MOV
 *.mp4
 *.MP4
+!assets/reel.mp4
 
 # Old working files — not part of the deployed site
 photos/
