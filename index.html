@@ -339,9 +339,7 @@
   </div>
   <div class="gallery-masonry" id="galleryGrid"></div>
   <div class="see-more-wrap">
-    <button class="see-more-btn" id="seeMoreBtn" onclick="toggleAllPhotos()">
-      SEE MORE WORK ↓
-    </button>
+    <button class="see-more-btn" id="seeMoreBtn" onclick="togglePhotos()">SEE MORE WORK ↓</button>
   </div>
 </section>
 
@@ -364,8 +362,7 @@
     <p class="sec-label reveal">// Showreel</p>
     <h2 class="sec-title reveal">DIRECTOR'S REEL</h2>
     <div class="reel-box reveal">
-      <video autoplay loop muted playsinline
-             style="width:100%;aspect-ratio:16/9;display:block;object-fit:cover;">
+      <video autoplay loop muted playsinline style="width:100%;aspect-ratio:16/9;display:block;object-fit:cover;">
         <source src="assets/reel.mp4" type="video/mp4">
       </video>
       <div class="reel-badge">// Director's Reel 2024</div>
@@ -491,11 +488,12 @@
   },{threshold:.08});
   revEls.forEach(el=>ro.observe(el));
 
-  // ── Photo config — update file names here to refresh photos on GitHub ──────
+  // ── Photo config — edit src paths here to refresh photos on GitHub ────────
   const PHOTOS = {
     hero:  'assets/images/photography/img-9667.jpg',
     gallery: [
-      // ── Photography (23) ──────────────────────────────────────────────
+      // ── Photography (24) ──────────────────────────────────────────────
+      { src:'assets/images/photography/street-session-01.jpg', cat:'photography', title:'STREET SESSION' },
       { src:'assets/images/photography/img-9374.jpg',  cat:'photography', title:'GOLDEN HOUR' },
       { src:'assets/images/photography/img-9422.jpg',  cat:'photography', title:'STUDIO 01' },
       { src:'assets/images/photography/img-9425.jpg',  cat:'photography', title:'STUDIO 02' },
@@ -519,7 +517,6 @@
       { src:'assets/images/photography/img-9289.jpg',  cat:'photography', title:'MOTION 03' },
       { src:'assets/images/photography/img-9300.jpg',  cat:'photography', title:'MOTION 04' },
       { src:'assets/images/photography/img-9286.jpg',  cat:'photography', title:'MOTION 05' },
-      { src:'assets/images/photography/street-session-01.jpg', cat:'photography', title:'STREET SESSION' },
       // ── Music Video (18) ──────────────────────────────────────────────
       { src:'assets/images/music-video/img-8059.jpg',     cat:'music-video', title:'REEL 01' },
       { src:'assets/images/music-video/img-8107.jpg',     cat:'music-video', title:'REEL 02' },
@@ -594,292 +591,205 @@
       { src:'assets/images/design/design-cover.jpg',  cat:'design', title:'DESIGN COVER' },
     ],
     about: 'assets/images/portraits/img-8694-edited.jpg',
-  }
+  };
 
-  // ── Persistence helpers ──────────────────────────────────────────────────
-  const STORE='arjay2reel-';
+    // ── Persistence ─────────────────────────────────────────────────────────
+  const STORE = 'arjay2reel-';
 
-  function getSlotId(input){
-    if(input.closest('#heroRight')||input.closest('.hero-right-upload')) return 'hero';
-    const wc=input.closest('.work-card');
-    if(wc){
-      const cls=[...wc.classList].find(c=>c.startsWith('wg-'));
-      return cls?'work-'+cls:null;
-    }
-    const gi=input.closest('.gallery-item');
-    if(gi){
-      const idx=[...document.querySelectorAll('#galleryGrid .gallery-item')].indexOf(gi);
-      return 'gallery-'+idx;
-    }
-    if(input.closest('#reel')) return 'reel';
-    if(input.closest('#about')) return 'about';
-    return null;
-  }
-
-  function saveSlot(slotId, dataURL){
-    if(!slotId) return;
-    try{ localStorage.setItem(STORE+slotId, dataURL); }
-    catch(e){ console.warn('Storage full — photo not saved:', slotId); }
-  }
+  function saveSlot(id, url){ try{ localStorage.setItem(STORE+id, url); } catch(e){} }
 
   function toDataURL(file, cb){
-    const r=new FileReader();
-    r.onload=e=>cb(e.target.result);
+    const r = new FileReader();
+    r.onload = e => cb(e.target.result);
     r.readAsDataURL(file);
   }
 
-  // ── Render helpers (used by upload + restore) ────────────────────────────
-  function renderHero(dataURL){
-    const right=document.getElementById('heroRight');
-    right.querySelectorAll('img').forEach(el=>el.remove());
-    const i=document.createElement('img'); i.src=dataURL;
-    right.insertBefore(i,right.firstChild);
+  // ── Render helpers ───────────────────────────────────────────────────────
+  function renderHero(src){
+    const right = document.getElementById('heroRight'); if(!right) return;
+    right.querySelectorAll('img').forEach(el => el.remove());
+    const i = document.createElement('img'); i.src = src;
+    right.insertBefore(i, right.firstChild);
     right.classList.add('filled');
   }
 
-  function renderWorkCard(wgCls, dataURL, isVideo){
-    const card=document.querySelector('.'+wgCls);
-    if(!card) return;
-    const fc=card.querySelector('.filled-card');
-    if(!fc) return;
-    fc.querySelectorAll('img,video').forEach(el=>el.remove());
-    if(isVideo){
-      const v=document.createElement('video');v.src=dataURL;v.autoplay=true;v.loop=true;v.muted=true;v.playsInline=true;fc.appendChild(v);
-    } else {
-      const im=document.createElement('img');im.src=dataURL;fc.appendChild(im);
-    }
-  }
-
-  function renderUbox(ub, dataURL, isVideo){
-    ub.querySelectorAll('img,video').forEach(el=>el.remove());
-    if(isVideo){
-      const v=document.createElement('video');v.src=dataURL;v.autoplay=true;v.loop=true;v.muted=true;v.playsInline=true;ub.appendChild(v);
-    } else {
-      const im=document.createElement('img');im.src=dataURL;ub.appendChild(im);
-    }
+  function renderUbox(ub, src, isVideo){
+    ub.querySelectorAll('img,video').forEach(el => el.remove());
+    const el = isVideo ? document.createElement('video') : document.createElement('img');
+    el.src = src;
+    if(isVideo){ el.autoplay=true; el.loop=true; el.muted=true; el.playsInline=true; }
+    ub.appendChild(el);
     ub.classList.add('filled');
   }
 
-  function renderGalleryItem(idx, dataURL){
-    const items=document.querySelectorAll('#galleryGrid .gallery-item');
-    const item=items[idx]; if(!item) return;
-    const ub=item.querySelector('.ubox'); if(!ub) return;
-    ub.querySelectorAll('img').forEach(el=>el.remove());
-    const im=document.createElement('img');
-    im.src=dataURL;
-    im.style.cssText='position:relative;width:100%;height:auto;display:block;z-index:1;';
-    ub.appendChild(im);
-    ub.classList.add('filled');
-    ub.style.minHeight='unset';
-  }
-
-  // ── Load default photos from assets/images (override with uploads) ──────
-  function loadDefaults(){
-    if(!localStorage.getItem(STORE+'hero') && PHOTOS.hero){
-      const right=document.getElementById('heroRight'); if(right){
-        const i=document.createElement('img'); i.src=PHOTOS.hero;
-        right.insertBefore(i,right.firstChild); right.classList.add('filled');
-      }
-    }
-    if(!localStorage.getItem(STORE+'about') && PHOTOS.about){
-      const ub=document.querySelector('#about .ubox'); if(ub) renderUbox(ub,PHOTOS.about,false);
-    }
-  }
-
-  // ── Portfolio gallery ────────────────────────────────────────────────────
+  // ── Gallery build ────────────────────────────────────────────────────────
   const CAT_LABELS = {
-    'photography': 'Photography',
-    'music-video': 'Music Video',
-    'bts':         'BTS',
-    'portraits':   'Portraits',
-    'design':      'Design',
+    'photography':'Photography', 'music-video':'Music Video',
+    'bts':'BTS', 'portraits':'Portraits', 'design':'Design',
   };
 
-  const PREVIEW_COUNT = 12;
-  let allVisible = false;
+  const PREVIEW = 12;
+  let expanded = false;
+  let activeFilter = 'all';
 
   function buildGallery(){
     const grid = document.getElementById('galleryGrid');
     if(!grid) return;
     grid.innerHTML = '';
-    PHOTOS.gallery.forEach((item) => {
+    PHOTOS.gallery.forEach(item => {
       const label = CAT_LABELS[item.cat] || item.cat;
       const el = document.createElement('div');
       el.className = 'gallery-item reveal';
-      el.setAttribute('data-cat', item.cat);
+      el.dataset.cat = item.cat;
       el.innerHTML =
-        '<div class="ubox filled" style="min-height:unset;border:none;" onclick="glbOpen(this)">' +
-          '<img src="' + item.src + '" loading="lazy" alt="' + label + ' — ' + item.title + '" ' +
-               'style="position:relative;width:100%;height:auto;display:block;z-index:1;">' +
+        '<div class="ubox filled" style="min-height:unset;border:none;cursor:pointer;" onclick="glbOpen(this)">' +
+          '<img src="' + item.src + '" loading="lazy" ' +
+               'style="position:relative;width:100%;height:auto;display:block;z-index:1;" ' +
+               'alt="' + label + '">' +
         '</div>' +
         '<div class="gallery-item-overlay">' +
           '<p class="gi-cat">' + label + '</p>' +
           '<p class="gi-title">' + item.title + '</p>' +
         '</div>' +
-        '<div class="gi-expand"><svg viewBox="0 0 24 24" stroke-width="2">' +
+        '<div class="gi-expand"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" ' +
+             'stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' +
           '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
           '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>' +
         '</svg></div>';
       grid.appendChild(el);
     });
-    applyCollapse();
+    applyView();
   }
 
-  function applyCollapse(){
-    const activeFilter = document.querySelector('.gf-btn.active')?.dataset.filter || 'all';
+  function applyView(){
+    const btn = document.getElementById('seeMoreBtn');
     let shown = 0;
     document.querySelectorAll('#galleryGrid .gallery-item').forEach(el => {
-      el.classList.remove('collapsed');
       const matches = activeFilter === 'all' || el.dataset.cat === activeFilter;
-      if(matches && !allVisible){
+      if(!matches){
+        el.classList.add('photo-hidden');
+      } else {
+        el.classList.remove('photo-hidden');
         shown++;
-        if(shown > PREVIEW_COUNT) el.classList.add('collapsed');
+        if(!expanded && shown > PREVIEW){
+          el.classList.add('photo-hidden');
+        }
       }
     });
-  }
-
-  function toggleAllPhotos(){
-    allVisible = !allVisible;
-    const btn = document.getElementById('seeMoreBtn');
-    if(allVisible){
-      document.querySelectorAll('#galleryGrid .gallery-item.collapsed').forEach(el => el.classList.remove('collapsed'));
-      if(btn) btn.textContent = 'SHOW LESS ↑';
-    } else {
-      applyCollapse();
-      if(btn) btn.textContent = 'SEE MORE WORK ↓';
-    }
+    if(btn) btn.textContent = expanded ? 'SHOW LESS ↑' : 'SEE MORE WORK ↓';
     buildLightboxIndex();
   }
 
-  // ── Restore all saved slots on load ──────────────────────────────────────
+  function togglePhotos(){
+    expanded = !expanded;
+    applyView();
+  }
+
+  // ── Defaults ─────────────────────────────────────────────────────────────
+  function loadDefaults(){
+    if(!localStorage.getItem(STORE+'hero') && PHOTOS.hero) renderHero(PHOTOS.hero);
+    if(!localStorage.getItem(STORE+'about') && PHOTOS.about){
+      const ub = document.querySelector('#about .ubox');
+      if(ub) renderUbox(ub, PHOTOS.about, false);
+    }
+  }
+
+  // ── Restore localStorage overrides ───────────────────────────────────────
   function restoreAll(){
     buildGallery();
-    for(let i=0;i<localStorage.length;i++){
-      const key=localStorage.key(i);
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i);
       if(!key.startsWith(STORE)) continue;
-      const slot=key.slice(STORE.length);
-      const dataURL=localStorage.getItem(key);
-      if(!dataURL) continue;
-      const isVideo=dataURL.startsWith('data:video');
-      if(slot==='hero'){
-        renderHero(dataURL);
-      } else if(slot.startsWith('work-')){
-        renderWorkCard(slot.slice(5), dataURL, isVideo);
-      } else if(slot.startsWith('gallery-')){
-        renderGalleryItem(parseInt(slot.slice(8)), dataURL);
-      } else if(slot==='reel'){
-        const ub=document.querySelector('#reel .ubox'); if(ub) renderUbox(ub,dataURL,isVideo);
-      } else if(slot==='about'){
-        const ub=document.querySelector('#about .ubox'); if(ub) renderUbox(ub,dataURL,false);
+      const slot = key.slice(STORE.length);
+      const url  = localStorage.getItem(key);
+      if(!url) continue;
+      if(slot === 'hero') renderHero(url);
+      else if(slot === 'about'){
+        const ub = document.querySelector('#about .ubox');
+        if(ub) renderUbox(ub, url, false);
       }
     }
     loadDefaults();
-    buildLightboxIndex();
   }
 
-  // ── Upload functions ──────────────────────────────────────────────────────
+  // ── Upload handlers ───────────────────────────────────────────────────────
   function swapHero(input){
-    const file=input.files[0]; if(!file) return;
-    toDataURL(file, dataURL=>{
-      renderHero(dataURL);
-      saveSlot('hero', dataURL);
-    });
+    const file = input.files[0]; if(!file) return;
+    toDataURL(file, url => { renderHero(url); saveSlot('hero', url); });
   }
 
   function loadMedia(input){
-    const file=input.files[0]; if(!file) return;
-    const slotId=getSlotId(input);
-    toDataURL(file, dataURL=>{
-      const isVideo=file.type.startsWith('video/');
-      const card=input.closest('.work-card');
-      if(card){
-        const cls=[...card.classList].find(c=>c.startsWith('wg-'));
-        renderWorkCard(cls, dataURL, isVideo);
-      } else {
-        const ub=input.closest('.ubox');
-        if(ub) renderUbox(ub, dataURL, isVideo);
-      }
-      saveSlot(slotId, dataURL);
+    const file = input.files[0]; if(!file) return;
+    toDataURL(file, url => {
+      const ub = input.closest('.ubox');
+      if(ub) renderUbox(ub, url, file.type.startsWith('video/'));
+      saveSlot('reel', url);
     });
   }
 
-  function fillGallery(input){
-    const file=input.files[0]; if(!file) return;
-    const slotId=getSlotId(input);
-    toDataURL(file, dataURL=>{
-      const gi=input.closest('.gallery-item');
-      const idx=[...document.querySelectorAll('#galleryGrid .gallery-item')].indexOf(gi);
-      renderGalleryItem(idx, dataURL);
-      saveSlot(slotId, dataURL);
-      buildLightboxIndex();
-    });
-  }
+  // ── Lightbox ─────────────────────────────────────────────────────────────
+  let glbItems = [], glbCurrent = 0;
 
-  // ── Lightbox ──────────────────────────────────────────────────────────────
-  let glbItems=[],glbCurrent=0;
   function buildLightboxIndex(){
-    glbItems=Array.from(document.querySelectorAll('#galleryGrid .gallery-item:not(.collapsed)'));
+    glbItems = Array.from(document.querySelectorAll('#galleryGrid .gallery-item:not(.photo-hidden)'));
   }
 
   function glbOpen(ubox){
-    const img=ubox.querySelector('img');
-    if(!img) return;
-    const item=ubox.closest('.gallery-item');
-    glbCurrent=glbItems.indexOf(item);
-    const cat=item.querySelector('.gi-cat')?item.querySelector('.gi-cat').textContent:'';
-    const title=item.querySelector('.gi-title')?item.querySelector('.gi-title').textContent:'';
-    document.getElementById('glbImg').src=img.src;
-    document.getElementById('glbInfo').textContent=cat+' — '+title;
+    const img = ubox.querySelector('img'); if(!img) return;
+    const item = ubox.closest('.gallery-item');
+    glbCurrent = glbItems.indexOf(item);
+    document.getElementById('glbImg').src = img.src;
+    document.getElementById('glbInfo').textContent =
+      (item.querySelector('.gi-cat')?.textContent || '') + ' — ' +
+      (item.querySelector('.gi-title')?.textContent || '');
     document.getElementById('glb').classList.add('open');
-    document.body.style.overflow='hidden';
+    document.body.style.overflow = 'hidden';
   }
 
   function glbClose(){
     document.getElementById('glb').classList.remove('open');
-    document.body.style.overflow='';
+    document.body.style.overflow = '';
   }
 
   function glbStep(dir){
-    const filled=glbItems.filter(it=>it.querySelector('.ubox img'));
-    if(!filled.length) return;
-    const ci=filled.indexOf(glbItems[glbCurrent]);
-    const ni=(ci+dir+filled.length)%filled.length;
-    const nextItem=filled[ni];
-    glbCurrent=glbItems.indexOf(nextItem);
-    const img=nextItem.querySelector('.ubox img');
-    const cat=nextItem.querySelector('.gi-cat')?nextItem.querySelector('.gi-cat').textContent:'';
-    const title=nextItem.querySelector('.gi-title')?nextItem.querySelector('.gi-title').textContent:'';
-    document.getElementById('glbImg').src=img.src;
-    document.getElementById('glbInfo').textContent=cat+' — '+title;
+    if(!glbItems.length) return;
+    glbCurrent = (glbCurrent + dir + glbItems.length) % glbItems.length;
+    const item = glbItems[glbCurrent];
+    const img  = item.querySelector('img');
+    document.getElementById('glbImg').src = img.src;
+    document.getElementById('glbInfo').textContent =
+      (item.querySelector('.gi-cat')?.textContent || '') + ' — ' +
+      (item.querySelector('.gi-title')?.textContent || '');
   }
 
-  document.getElementById('glb').addEventListener('click',function(e){if(e.target===this)glbClose();});
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape')glbClose();
-    if(e.key==='ArrowLeft')glbStep(-1);
-    if(e.key==='ArrowRight')glbStep(1);
+  document.getElementById('glb').addEventListener('click', function(e){
+    if(e.target === this) glbClose();
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape')      glbClose();
+    if(e.key === 'ArrowLeft')   glbStep(-1);
+    if(e.key === 'ArrowRight')  glbStep(1);
   });
 
-  // ── Gallery filter ────────────────────────────────────────────────────────
-  document.querySelectorAll('.gf-btn').forEach(btn=>{
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('.gf-btn').forEach(b=>b.classList.remove('active'));
+  // ── Filter tabs ───────────────────────────────────────────────────────────
+  document.querySelectorAll('.gf-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.gf-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      const f=this.dataset.filter;
-      document.querySelectorAll('#galleryGrid .gallery-item').forEach(item=>{
-        const match=(f==='all'||item.dataset.cat===f);
-        item.style.display=match?'':'none';
-        if(!match) item.classList.remove('collapsed');
-      });
-      allVisible=false;
-      const btn=document.getElementById('seeMoreBtn');
-      if(btn) btn.textContent='SEE MORE WORK ↓';
-      if(!allVisible) applyCollapse();
-      buildLightboxIndex();
+      activeFilter = this.dataset.filter;
+      expanded = false;
+      applyView();
     });
   });
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // ── Scroll reveal ─────────────────────────────────────────────────────────
+  const revEls = document.querySelectorAll('.reveal');
+  const ro = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, {threshold: 0.08});
+  revEls.forEach(el => ro.observe(el));
+
+  // ── Init ─────────────────────────────────────────────────────────────────
   restoreAll();
 </script>
 </body>
