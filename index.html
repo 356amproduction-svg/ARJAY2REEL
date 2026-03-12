@@ -469,7 +469,7 @@
   <div class="foot-copy">© 2025 ARJAY2REEL PRODUCTION. ALL RIGHTS RESERVED.</div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
   // Cursor
   const cur=document.getElementById('cur'),trail=document.getElementById('cur-trail');
   let mx=-100,my=-100,tx=-100,ty=-100;
@@ -639,7 +639,7 @@
     PHOTOS.gallery.forEach(item => {
       const label = CAT_LABELS[item.cat] || item.cat;
       const el = document.createElement('div');
-      el.className = 'gallery-item reveal';
+      el.className = 'gallery-item reveal on';
       el.dataset.cat = item.cat;
       el.innerHTML =
         '<div class="ubox filled" style="min-height:unset;border:none;cursor:pointer;" onclick="glbOpen(this)">' +
@@ -781,13 +781,6 @@
       applyView();
     });
   });
-
-  // ── Scroll reveal ─────────────────────────────────────────────────────────
-  const revEls = document.querySelectorAll('.reveal');
-  const ro = new IntersectionObserver(entries => {
-    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
-  }, {threshold: 0.08});
-  revEls.forEach(el => ro.observe(el));
 
   // ── Init ─────────────────────────────────────────────────────────────────
   restoreAll();
